@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -std=c17 -Wall
+CFLAGS = -std=c17 -Wall -g
 
 # Target executable
 TARGET = jvim
@@ -17,6 +17,6 @@ $(TARGET): $(SRC)
 
 # Clean up
 clean:
-	rm -f $(TARGET)
+	rm -rf $(TARGET) jvim.dSYM
 
 .PHONY: all clean

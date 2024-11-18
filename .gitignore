@@ -1,0 +1,5 @@
+# Ignore the executable named 'jvim'
+jvim
+
+# Ignore the folder 'jvim.dSYM'
+jvim.dSYM/
