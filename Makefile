@@ -8,11 +8,14 @@ TARGET = jvim
 # Source files
 SRC = jvim.c
 
+# Header files
+HEADERS = layouts.h text.h colors.h
+
 # Default target
 all: $(TARGET)
 
 # Build target
-$(TARGET): $(SRC)
+$(TARGET): $(SRC) $(HEADERS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SRC)
 
 # Clean up
