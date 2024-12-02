@@ -22,6 +22,7 @@ int main(int argc, char **argv){
     // setup
     char c;
     while (read(STDIN_FILENO, &c, 1) == 1){
+      // some asserts for debugging
       assert(config.cursor.x >= 0);
       assert(config.cursor.y >= 1);
       assert(config.file->num_lines > 0);
@@ -29,7 +30,6 @@ int main(int argc, char **argv){
       assert(config.cursor.x <= config.file->lines[config.cursor.y - 1]->line_length);
       if(c == 127 || c == 8){
         Editor_SetCursor(TextFile_DeleteChar(config.file, config.cursor));
-        //Editor_MoveCursor(0, -1);
       } else if (c == 27){
         Process_Escape();
       }
@@ -41,12 +41,14 @@ int main(int argc, char **argv){
       //https://stackoverflow.com/questions/26423537/how-to-position-the-input-text-cursor-in-c
       //https://stackoverflow.com/questions/50884685/how-to-get-cursor-position-in-c-using-ansi-code
     }
-
+    finish();
     return 0;
 }
 
 void Process_Escape(){
   char c;
+  //if the user just pressed the escape key, return
+  if (read(STDIN_FILENO, &c, 1) != 1) return;
   if (read(STDIN_FILENO, &c, 1) == 1){
     if (c == '['){
       if (read(STDIN_FILENO, &c, 1) == 1){
@@ -104,7 +106,6 @@ void setup() {
   // enable raw mode
   setvbuf(stdout, NULL, _IONBF, 0);
   tcgetattr(STDIN_FILENO, &(config.orig_termios));
-  atexit(finish);
   struct termios raw = config.orig_termios;
   raw.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);

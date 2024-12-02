@@ -95,19 +95,10 @@ TextPos TextFile_InsertChar(TextFile* file, char c, TextPos pos){
   new_pos.x += 1;
   return new_pos;
 }
-/*
-void TextFile_DeleteChar(TextFile* file){
-  if(file->num_lines == 0) return;
-  TextLine* cur_line = file->lines[file->num_lines - 1];
-  if(cur_line->line_length == 0) {
-    free(cur_line);
-    file->num_lines -= 1;
-  } else {
-    cur_line->line_length -= 1;
-  }
-} */
 
 TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
+  // check if we are at the beginning of the file
+  if(pos.x == 0 && pos.y == 1) return pos;
   // create a new pos
   TextPos new_pos = {.x = pos.x, .y = pos.y};
   TextLine* cur_line = file->lines[pos.y - 1];
@@ -117,13 +108,14 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
       file->lines[i-1] = file->lines[i];
     }
     file->num_lines -= 1;
+  
+    // update new pos
+    new_pos.x = file->lines[pos.y - 2]->line_length;
     new_pos.y -= 1;
     return new_pos;
   } else {
     //handle the case where we are at the beginning of the line
     if(pos.x == 0){
-      // check if we are at the beginning of the file
-      if(pos.y == 1) return new_pos;
       // move the rest of the line to the previous line
       TextLine* prev_line = file->lines[pos.y - 2];
       for (int i = prev_line->line_length; i < MAX_LINE_LENGTH; i++){
@@ -136,6 +128,7 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
         file->lines[i-1] = file->lines[i];
       }
       file->num_lines -= 1;
+      
       // update new pos
       new_pos.y -= 1;
       return new_pos;
