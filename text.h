@@ -20,10 +20,16 @@ TextFile* TextFile_Allocate() {
   return tf;
 }
 
-TextLine* TextFile_AddLine(TextFile* file) {
+TextLine* TextFile_AppendLine(TextFile* file) {
   //if(file->num_lines == MAX_LINE_NUMBER) return;
   file->lines[file->num_lines] = (TextLine*) malloc(sizeof(TextLine));
   return file->lines[file->num_lines++];
+}
+
+TextFile* TextFile_Setup() {
+  TextFile* tf = TextFile_Allocate();
+  TextFile_AppendLine(tf);
+  return tf;
 }
 
 TextLine* TextFile_InsertLine(TextFile* file, int line_number) {
@@ -38,17 +44,17 @@ TextLine* TextFile_InsertLine(TextFile* file, int line_number) {
 
 void TextFile_AppendChar(TextFile* file, char c) {
   if(c == 10){
-    TextFile_AddLine(file);
+    TextFile_AppendLine(file);
     return;
   }
   TextLine* cur_line;
   if(file->num_lines == 0){
-    cur_line = TextFile_AddLine(file);
+    cur_line = TextFile_AppendLine(file);
   }
   else {
     cur_line = file->lines[file->num_lines - 1];
     if (cur_line->line_length == MAX_LINE_LENGTH){
-      cur_line = TextFile_AddLine(file);
+      cur_line = TextFile_AppendLine(file);
     }
   }
   cur_line->text[cur_line->line_length++] = c;
@@ -58,13 +64,13 @@ TextPos TextFile_InsertChar(TextFile* file, char c, TextPos pos){
   TextPos new_pos = {.x= pos.x, .y= pos.y};
   TextLine* cur_line;
   if(file->num_lines == 0){
-    cur_line = TextFile_AddLine(file);
+    cur_line = TextFile_AppendLine(file);
   }
   else {
     // broken when we go over the max limit
     cur_line = file->lines[pos.y - 1];
     if (cur_line->line_length >= MAX_LINE_LENGTH - 1){
-      cur_line = TextFile_AddLine(file);
+      cur_line = TextFile_AppendLine(file);
     }
   }
   if(c == 10){
@@ -102,9 +108,6 @@ void TextFile_DeleteChar(TextFile* file){
 } */
 
 TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
-  if(file->num_lines == 0){
-    return pos;
-  }
   // create a new pos
   TextPos new_pos = {.x = pos.x, .y = pos.y};
   TextLine* cur_line = file->lines[pos.y - 1];
@@ -126,7 +129,7 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
       for (int i = prev_line->line_length; i < MAX_LINE_LENGTH; i++){
         prev_line->text[i] = cur_line->text[i - prev_line->line_length];
       }
-      new_pos.x = prev_line->line_length + 1;
+      new_pos.x = prev_line->line_length;
       prev_line->line_length += cur_line->line_length;
       free(cur_line);
       for (int i = pos.y; i < file->num_lines; i++){
@@ -141,7 +144,7 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
       cur_line->text[i] = cur_line->text[i+1];
     }
     cur_line->line_length -= 1;
-    //new_pos.x -= 1;
+    new_pos.x -= 1;
     return new_pos;
   }
 }
@@ -150,7 +153,7 @@ void TextFile_Print(TextFile* file){
   printf("\e[1;1H\e[2J");
   if(file->num_lines == 0){
     printf(GREEN);
-    printf("1   ");
+    printf("X   ");
     printf(RESETCOLOR);
     return;
   } 

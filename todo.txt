@@ -1,0 +1,6 @@
+- Header for information
+- Insert and non/insert mode
+- File I/O
+- General vim commands (jumping back and forth)
+- Syntax highlighting
+- Find and Replace
