@@ -14,12 +14,6 @@ TextLine* TextLine_Allocate() {
   return tl;
 }
 
-TextFile* TextFile_Allocate() {
-  TextFile* tf = (TextFile*) malloc(sizeof(TextFile));
-  tf->num_lines = 0;
-  return tf;
-}
-
 TextLine* TextFile_AppendLine(TextFile* file) {
   //if(file->num_lines == MAX_LINE_NUMBER) return;
   file->lines[file->num_lines] = (TextLine*) malloc(sizeof(TextLine));
@@ -27,7 +21,8 @@ TextLine* TextFile_AppendLine(TextFile* file) {
 }
 
 TextFile* TextFile_Setup() {
-  TextFile* tf = TextFile_Allocate();
+  TextFile* tf = (TextFile*) malloc(sizeof(TextFile));
+  tf->num_lines = 0;
   TextFile_AppendLine(tf);
   return tf;
 }
