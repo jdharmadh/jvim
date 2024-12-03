@@ -3,6 +3,7 @@
 
 #include <termios.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #define MAX_LINE_LENGTH 512
 #define MAX_LINE_NUMBER 1024
@@ -35,6 +36,7 @@ typedef struct editorConfig {
   TextFile* file;
   TextPos cursor;
   enum EditorMode mode;
+  bool running;
 } EditorConfig;
 
 #endif // LAYOUT_H_

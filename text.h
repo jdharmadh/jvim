@@ -128,7 +128,7 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
         file->lines[i-1] = file->lines[i];
       }
       file->num_lines -= 1;
-      
+
       // update new pos
       new_pos.y -= 1;
       return new_pos;
@@ -143,13 +143,6 @@ TextPos TextFile_DeleteChar(TextFile* file, TextPos pos){
 }
 
 void TextFile_Print(TextFile* file){
-  printf("\e[1;1H\e[2J");
-  if(file->num_lines == 0){
-    printf(GREEN);
-    printf("X   ");
-    printf(RESETCOLOR);
-    return;
-  } 
   for (int i = 0; i < file->num_lines-1; i++) {
     printf(GREEN);
     printf("%d   ", i+1);
