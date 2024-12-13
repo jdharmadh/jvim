@@ -22,11 +22,11 @@ int main(int argc, char **argv){
     while (config->running && read(STDIN_FILENO, &c, 1) == 1){
       // some asserts for debugging
       assert(config->running);
-      assert(config->cursor.x >= 0);
-      assert(config->cursor.y >= 1);
+      assert(config->window_cursor.x >= 0);
+      assert(config->window_cursor.y >= 1);
       assert(config->file->num_lines > 0);
-      assert(config->cursor.y <= config->file->num_lines + 1);
-      assert(config->cursor.x <= config->file->lines[config->cursor.y - 1]->line_length);
+      // assert(config->window_cursor.y <= config->file->num_lines + 1);
+      // assert(config->window_cursor.x <= config->file->lines[config->window_cursor.y - 1]->line_length);
       Editor_ProcessKey(config, c);
       Editor_PrintCursor(config);
     }
@@ -48,6 +48,8 @@ void setup(char *filename) {
     TextFile_AppendChar(config->file, c);
   }
   fclose(file);
+  // get the window size
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &(config->window_size));
   // enable raw mode
   setvbuf(stdout, NULL, _IONBF, 0);
   tcgetattr(STDIN_FILENO, &(config->orig_termios));

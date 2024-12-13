@@ -2,6 +2,7 @@
 #define LAYOUT_H_
 
 #include <termios.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include <stdbool.h>
 
@@ -34,7 +35,9 @@ enum EditorMode {
 typedef struct editorConfig {
   struct termios orig_termios;
   TextFile* file;
-  TextPos cursor;
+  TextPos window_cursor;
+  TextPos file_cursor; // x represents columns past zero, y represents lines past zero
+  struct winsize window_size;
   enum EditorMode mode;
   bool running;
 } EditorConfig;

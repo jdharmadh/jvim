@@ -20,8 +20,10 @@ void Editor_Print(EditorConfig *config);
 EditorConfig* Editor_FreshSetup() {
   EditorConfig* ec = (EditorConfig*) malloc(sizeof(EditorConfig));
   ec->file = TextFile_Setup();
-  ec->cursor.x = 0;
-  ec->cursor.y = 1;
+  ec->window_cursor.x = 0;
+  ec->window_cursor.y = 1;
+  ec->file_cursor.x = 0;
+  ec->file_cursor.y = 1;
   ec->mode = NORMAL;
   ec->running = true;
   return ec;
@@ -36,9 +38,21 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
   // check if we are in insert mode
   if (config->mode == INSERT) {
     if(c == 127 || c == 8){
-        Editor_SetCursor(config, TextFile_DeleteChar(config->file, config->cursor));
+        TextPos file_pos = config->window_cursor;
+        file_pos.x += config->file_cursor.x;
+        file_pos.y += config->file_cursor.y - 1;
+        TextPos new_pos = TextFile_DeleteChar(config->file, file_pos);
+        new_pos.x -= config->file_cursor.x;
+        new_pos.y -= config->file_cursor.y - 1;
+        Editor_SetCursor(config, new_pos);
       } else {
-        Editor_SetCursor(config, TextFile_InsertChar(config->file, c, config->cursor));
+        TextPos file_pos = config->window_cursor;
+        file_pos.x += config->file_cursor.x;
+        file_pos.y += config->file_cursor.y - 1;
+        TextPos new_pos = TextFile_InsertChar(config->file, c, file_pos);
+        new_pos.x -= config->file_cursor.x;
+        new_pos.y -= config->file_cursor.y - 1;
+        Editor_SetCursor(config, new_pos);
     }
     Editor_Print(config);
   } else {
@@ -49,25 +63,25 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
     } else if (c == 'q'){
       config->running = false;
     } else if (c == '0'){
-      config->cursor.x = 0;
+      config->window_cursor.x = 0;
     } else if (c == '$'){
-      config->cursor.x = config->file->lines[config->cursor.y - 1]->line_length;
+      config->window_cursor.x = config->file->lines[config->window_cursor.y - 1]->line_length;
     } else if (c == 'G'){
-      config->cursor.y = config->file->num_lines;
+      config->window_cursor.y = config->file->num_lines;
     } else if (c == 'o'){
-      TextFile_InsertLine(config->file, config->cursor.y);
-      config->cursor.y += 1;
-      config->cursor.x = 0;
+      TextFile_InsertLine(config->file, config->window_cursor.y);
+      config->window_cursor.y += 1;
+      config->window_cursor.x = 0;
       Editor_Print(config);
     } else if (c == 'O'){
-      TextFile_InsertLine(config->file, config->cursor.y - 1);
-      config->cursor.x = 0;
+      TextFile_InsertLine(config->file, config->window_cursor.y - 1);
+      config->window_cursor.x = 0;
       Editor_Print(config);
     }
     else if (c == 'd'){
       printf("\33[2K\r");
       printf(GREEN);
-      printf("%s", config->file->lines[config->cursor.y - 1]->text);
+      printf("%s", config->file->lines[config->window_cursor.y - 1]->text);
       printf(RESETCOLOR);
     }
   }
@@ -82,6 +96,7 @@ void Editor_ProcessEscape(EditorConfig *config){
   if (read(STDIN_FILENO, &c, 1) == 1) {
     if (c == '['){
       config->mode = prev_mode;
+      // Editor_ReprintHeader(config);
       if (read(STDIN_FILENO, &c, 1) == 1){
         if (c == 'A'){
           Editor_MoveCursor(config, -1, 0);
@@ -92,6 +107,8 @@ void Editor_ProcessEscape(EditorConfig *config){
         } else if (c == 'D'){
           Editor_MoveCursor(config, 0, -1);
         }
+
+        Editor_Print(config);
       }
     } else {
       Editor_ProcessKey(config, c);
@@ -100,34 +117,45 @@ void Editor_ProcessEscape(EditorConfig *config){
 }
 
 void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change){
-  TextPos new_pos = {.x = config->cursor.x + col_change, .y = config->cursor.y + row_change};
+  TextPos new_pos = {.x = config->window_cursor.x + col_change, .y = config->window_cursor.y + row_change};
   Editor_SetCursor(config, new_pos);
 }
 
 void Editor_SetCursor(EditorConfig *config, TextPos pos){
-  config->cursor.x = pos.x;
-  config->cursor.y = pos.y;
-  if (config->cursor.x < 0){
-    if (config->cursor.y > 1){
-      config->cursor.y -= 1;
-      config->cursor.x = config->file->lines[config->cursor.y - 1]->line_length;
+  config->window_cursor.x = pos.x;
+  config->window_cursor.y = pos.y;
+  if (config->window_cursor.x < 0){
+    if (config->window_cursor.y + config->file_cursor.y > 2){
+      config->window_cursor.y -= 1;
+      config->window_cursor.x = config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length;
     } else {
-      config->cursor.x = 0;
+      config->window_cursor.x = 0;
     }
   }
-  if (config->cursor.y < 1) config->cursor.y = 1;
+  if (config->window_cursor.y < 1){
+    config->file_cursor.y -= 1;
+    if (config->file_cursor.y < 1){
+      config->file_cursor.y = 1;
+    }
+    config->window_cursor.y = 1;
+  }
   //don't allow the cursor to go past the end of the file
-  if (config->cursor.y > config->file->num_lines){
-    config->cursor.y = config->file->num_lines;
+  if (config->window_cursor.y > config->window_size.ws_row - 3){ // todo: fix this
+    config->window_cursor.y = config->window_size.ws_row - 1;
+    config->file_cursor.y += 1;
+    if (config->file_cursor.y > config->file->num_lines){
+      config->file_cursor.y = config->file->num_lines;
+    }
+    config->window_cursor.y = config->window_size.ws_row - 3; // TODO: fix this
   }
   //don't allow the cursor to go past the end of the line
-  if (config->cursor.x > config->file->lines[config->cursor.y - 1]->line_length){
-    config->cursor.x = config->file->lines[config->cursor.y - 1]->line_length;
+  if (config->window_cursor.x > config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length){
+    config->window_cursor.x = config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length;
   }
 }
 
 void Editor_PrintCursor(EditorConfig *config){
-  printf("\e[%d;%dH", config->cursor.y + 1, config->cursor.x + 5);
+  printf("\e[%d;%dH", config->window_cursor.y + 1, config->window_cursor.x + 5);
 }
 
 void Editor_PrintHeader(EditorConfig *config){
@@ -135,11 +163,15 @@ void Editor_PrintHeader(EditorConfig *config){
     printf(YELLOW);
     printf("-- INSERT --");
     printf(RESETCOLOR);
+  } else {
+    printf(" file cursor: (%d, %d)", config->file_cursor.x, config->file_cursor.y);
+    printf(" window cursor: (%d, %d)", config->window_cursor.x, config->window_cursor.y);
+    printf("starting from line %d", config->file_cursor.y);
   }
 }
 
 void Editor_ReprintHeader(EditorConfig *config) {
-  TextPos old_pos = {.x = config->cursor.x, .y = config->cursor.y};
+  TextPos old_pos = {.x = config->window_cursor.x, .y = config->window_cursor.y};
   printf("\e[1;1H\e[2K");
   Editor_PrintHeader(config);
   Editor_SetCursor(config, old_pos);
@@ -150,7 +182,14 @@ void Editor_Print(EditorConfig *config){
   printf("\e[1;1H\e[2J");
   Editor_PrintHeader(config);
   printf("\n");
-  TextFile_Print(config->file);
+  for (int i = config->file_cursor.y - 1; i < config->file_cursor.y + config->window_size.ws_row - 3; i++){
+    if (i < config->file->num_lines){
+      TextFile_PrintLine(config->file, i + 1);
+      printf("\n");
+    } else {
+      printf("~\n");
+    }
+  }
   Editor_PrintCursor(config);
 }
 

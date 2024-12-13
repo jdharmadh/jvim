@@ -62,7 +62,7 @@ TextPos TextFile_InsertChar(TextFile* file, char c, TextPos pos){
     cur_line = TextFile_AppendLine(file);
   }
   else {
-    // broken when we go over the max limit
+    // TODO: broken when we go over the max limit
     cur_line = file->lines[pos.y - 1];
     if (cur_line->line_length >= MAX_LINE_LENGTH - 1){
       cur_line = TextFile_AppendLine(file);
@@ -150,4 +150,12 @@ void TextFile_Print(TextFile* file){
   printf("%.*s", file->lines[file->num_lines-1]->line_length, file->lines[file->num_lines-1]->text);
 }
 
+void TextFile_PrintLine(TextFile* file, int line_number){
+  printf(GREEN);
+  printf("%d", line_number);
+  if (line_number >= 10) printf("__");
+  else printf("___");
+  printf(RESETCOLOR);
+  printf("%.*s", file->lines[line_number - 1]->line_length, file->lines[line_number - 1]->text);
+}
 #endif // TEXT_H_
