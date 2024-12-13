@@ -7,16 +7,17 @@
 #include "text.h"
 #include "colors.h"
 
-EditorConfig* Editor_Setup();
+EditorConfig* Editor_FreshSetup();
 void Editor_ProcessKey(EditorConfig *config, char c);
 void Editor_ProcessEscape(EditorConfig *config);
 void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change);
 void Editor_SetCursor(EditorConfig *config, TextPos pos);
 void Editor_PrintCursor(EditorConfig *config);
 void Editor_PrintHeader(EditorConfig *config);
+void Editor_ReprintHeader(EditorConfig *config);
 void Editor_Print(EditorConfig *config);
 
-EditorConfig* Editor_Setup() {
+EditorConfig* Editor_FreshSetup() {
   EditorConfig* ec = (EditorConfig*) malloc(sizeof(EditorConfig));
   ec->file = TextFile_Setup();
   ec->cursor.x = 0;
@@ -39,10 +40,12 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       } else {
         Editor_SetCursor(config, TextFile_InsertChar(config->file, c, config->cursor));
     }
+    Editor_Print(config);
   } else {
     // if the user pressed the i key, enter insert mode
     if (c == 'i'){
       config->mode = INSERT;
+      Editor_ReprintHeader(config);
     } else if (c == 'q'){
       config->running = false;
     } else if (c == '0'){
@@ -55,9 +58,17 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       TextFile_InsertLine(config->file, config->cursor.y);
       config->cursor.y += 1;
       config->cursor.x = 0;
+      Editor_Print(config);
     } else if (c == 'O'){
       TextFile_InsertLine(config->file, config->cursor.y - 1);
       config->cursor.x = 0;
+      Editor_Print(config);
+    }
+    else if (c == 'd'){
+      printf("\33[2K\r");
+      printf(GREEN);
+      printf("%s", config->file->lines[config->cursor.y - 1]->text);
+      printf(RESETCOLOR);
     }
   }
 }
@@ -67,8 +78,8 @@ void Editor_ProcessEscape(EditorConfig *config){
   int prev_mode = config->mode;
   //if the user just pressed the escape key, return to normal mode
   config->mode = NORMAL;
-  Editor_Print(config);
-  if (read(STDIN_FILENO, &c, 1) == 1){
+  Editor_ReprintHeader(config);
+  if (read(STDIN_FILENO, &c, 1) == 1) {
     if (c == '['){
       config->mode = prev_mode;
       if (read(STDIN_FILENO, &c, 1) == 1){
@@ -120,12 +131,19 @@ void Editor_PrintCursor(EditorConfig *config){
 }
 
 void Editor_PrintHeader(EditorConfig *config){
-  
   if (config->mode == INSERT){
     printf(YELLOW);
     printf("-- INSERT --");
     printf(RESETCOLOR);
   }
+}
+
+void Editor_ReprintHeader(EditorConfig *config) {
+  TextPos old_pos = {.x = config->cursor.x, .y = config->cursor.y};
+  printf("\e[1;1H\e[2K");
+  Editor_PrintHeader(config);
+  Editor_SetCursor(config, old_pos);
+  Editor_PrintCursor(config);
 }
 
 void Editor_Print(EditorConfig *config){

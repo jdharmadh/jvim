@@ -9,7 +9,7 @@ TARGET = jvim
 SRC = jvim.c
 
 # Header files
-HEADERS = layouts.h text.h colors.h
+HEADERS = layouts.h text.h colors.h editor.h
 
 # Default target
 all: $(TARGET)
