@@ -9,3 +9,6 @@ jvim.dSYM/
 
 # Ignore DS_Store files
 .DS_Store
+
+# Ignore text files
+*.txt
