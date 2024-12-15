@@ -164,7 +164,8 @@ void TextFile_Print(TextFile* file){
 void TextFile_PrintLine(TextFile* file, int line_number){
   printf(GREEN);
   printf("%d", line_number);
-  if (line_number >= 10) printf("  ");
+  if (line_number >= 100) printf(" ");
+  else if (line_number >= 10) printf("  ");
   else printf("   ");
   printf(RESETCOLOR);
   printf("%.*s", file->lines[line_number - 1]->line_length, file->lines[line_number - 1]->text);

@@ -69,7 +69,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       config->window_cursor.x = 0;
     } else if (c == '$'){
       config->window_cursor.x = config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length;
-    } else if (c == 'G'){
+    } else if (c == 'G'){ // todo: BROKEN!
       // move file_cursor to end of file, then move window cursor too
       config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
       config->window_cursor.y = config->window_size.ws_row - 1;
@@ -156,11 +156,18 @@ void Editor_SetCursor(EditorConfig *config, TextPos pos){
     config->window_cursor.y = 1;
   }
   //don't allow the cursor to go past the end of the file
+  if (config->window_cursor.y > config->file->num_lines){
+    config->window_cursor.y = config->file->num_lines; // TODO: BROKEN!
+    // config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
+    // if (config->file_cursor.y < 1){
+    //   config->file_cursor.y = 1;
+    // }
+  }
   if (config->window_cursor.y > config->window_size.ws_row - 1){
     config->window_cursor.y = config->window_size.ws_row - 1;
     config->file_cursor.y += 1;
-    if (config->file_cursor.y > config->file->num_lines){
-      config->file_cursor.y = config->file->num_lines;
+    if (config->file_cursor.y > config->file->num_lines - config->window_size.ws_row + 2){
+      config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
     }
     config->window_cursor.y = config->window_size.ws_row - 1;
   }
@@ -189,6 +196,9 @@ void Editor_PrintHeader(EditorConfig *config){
     printf(":");
     printf("%.*s", config->cmd_buf->idx, config->cmd_buf->buf);
     printf(RESETFORMAT);
+  } else {
+    printf("file cursor: %d, %d", config->file_cursor.y, config->file_cursor.x);
+    printf(" window cursor: %d, %d", config->window_cursor.y, config->window_cursor.x);
   }
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
