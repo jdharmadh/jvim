@@ -15,6 +15,7 @@ void Editor_SetCursor(EditorConfig *config, TextPos pos);
 void Editor_PrintCursor(EditorConfig *config);
 void Editor_PrintHeader(EditorConfig *config);
 void Editor_Print(EditorConfig *config);
+void Editor_Free(EditorConfig *config);
 
 EditorConfig* Editor_FreshSetup() {
   EditorConfig* ec = (EditorConfig*) malloc(sizeof(EditorConfig));
@@ -166,12 +167,8 @@ void Editor_PrintHeader(EditorConfig *config){
     printf(YELLOW);
     printf("  -- INSERT --");
     printf(RESETCOLOR);
-  } else {
-    printf(GREEN);
-    printf(" file cursor: (%d, %d)", config->file_cursor.x, config->file_cursor.y);
-    printf(" window cursor: (%d, %d)", config->window_cursor.x, config->window_cursor.y);
-    printf(" winsize (%d, %d)", config->window_size.ws_row, config->window_size.ws_col);
-    printf(RESETCOLOR);
+  } else if (config->mode == COMMAND){
+    // command mode
   }
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
@@ -189,6 +186,11 @@ void Editor_Print(EditorConfig *config){
   }
   Editor_PrintHeader(config);
   Editor_PrintCursor(config);
+}
+
+void Editor_Free(EditorConfig *config){
+  TextFile_Free(config->file);
+  free(config);
 }
 
 #endif // EDITOR_H_

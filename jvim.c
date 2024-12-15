@@ -71,6 +71,9 @@ void finish(char *filename) {
   }
   fprintf(file, "%.*s", config->file->lines[config->file->num_lines - 1]->line_length, config->file->lines[config->file->num_lines - 1]->text);
   fclose(file);
+  // disable raw mode
   printf("\e[1;1H\e[2J");
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &(config->orig_termios));
+  // free all memory
+  Editor_Free(config);
 }

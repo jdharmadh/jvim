@@ -158,4 +158,12 @@ void TextFile_PrintLine(TextFile* file, int line_number){
   printf(RESETCOLOR);
   printf("%.*s", file->lines[line_number - 1]->line_length, file->lines[line_number - 1]->text);
 }
+
+void TextFile_Free(TextFile* file){
+  for (int i = 0; i < file->num_lines; i++){
+    free(file->lines[i]);
+  }
+  free(file);
+}
+
 #endif // TEXT_H_
