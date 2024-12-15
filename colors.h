@@ -10,4 +10,10 @@
 #define CYAN "\033[36m"
 #define WHITE "\033[37m"
 
+#define BOLD "\033[1m"
+#define UNDERLINE "\033[4m"
+#define BLINK "\033[5m"
+#define REVERSE "\033[7m"
+#define RESETFORMAT "\033[22m"
+
 #endif // COLORS_H_

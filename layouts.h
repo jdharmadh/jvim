@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#define MAX_COMMAND_LENGTH 64
 #define MAX_LINE_LENGTH 512
 #define MAX_LINE_NUMBER 1024
 
@@ -32,6 +33,11 @@ enum EditorMode {
   COMMAND
 };
 
+typedef struct cmd_buf {
+  char buf[MAX_COMMAND_LENGTH];
+  int16_t idx;
+} CommandBuffer;
+
 typedef struct editorConfig {
   struct termios orig_termios;
   TextFile* file;
@@ -39,6 +45,7 @@ typedef struct editorConfig {
   TextPos file_cursor; // x represents columns past zero, y represents lines past zero
   struct winsize window_size;
   enum EditorMode mode;
+  CommandBuffer* cmd_buf;
   bool running;
 } EditorConfig;
 

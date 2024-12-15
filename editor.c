@@ -5,6 +5,7 @@
 #include "text.h"
 #include "colors.h"
 #include "layouts.h"
+#include "command.h"
 #include "editor.h"
 
 EditorConfig* Editor_FreshSetup() {
@@ -14,6 +15,7 @@ EditorConfig* Editor_FreshSetup() {
   ec->window_cursor.y = 1;
   ec->file_cursor.x = 0;
   ec->file_cursor.y = 1;
+  ec->cmd_buf = CommandBuffer_Init();
   ec->mode = NORMAL;
   ec->running = true;
   return ec;
@@ -45,13 +47,30 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
         Editor_SetCursor(config, new_pos);
     }
     Editor_Print(config);
+  } else if (config->mode == COMMAND){
+        if (c == 127){
+            CommandBuffer_DeleteChar(config->cmd_buf);
+        } else if (c == 10){
+            if (config->cmd_buf->idx == 0){
+                config->mode = NORMAL;
+            }
+            else if (config->cmd_buf->buf[0] == 'w'){
+                // write the file
+            } else if (config->cmd_buf->buf[0] == 'q'){
+                config->running = false;
+            }
+            CommandBuffer_Clear(config->cmd_buf);
+            config->mode = NORMAL;
+        }
+        else {
+            CommandBuffer_AddChar(config->cmd_buf, c);
+        }
+        Editor_PrintHeader(config);
   } else {
     // if the user pressed the i key, enter insert mode
     if (c == 'i'){
       config->mode = INSERT;
       Editor_PrintHeader(config);
-    } else if (c == 'q'){
-      config->running = false;
     } else if (c == '0'){
       config->window_cursor.x = 0;
     } else if (c == '$'){
@@ -70,6 +89,9 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       TextFile_InsertLine(config->file, config->window_cursor.y + config->file_cursor.y - 2);
       config->window_cursor.x = 0;
       Editor_Print(config);
+    } else if (c == ':'){
+        config->mode = COMMAND;
+        Editor_PrintHeader(config);
     }
   }
 }
@@ -79,6 +101,7 @@ void Editor_ProcessEscape(EditorConfig *config){
   int prev_mode = config->mode;
   //if the user just pressed the escape key, return to normal mode
   config->mode = NORMAL;
+  CommandBuffer_Clear(config->cmd_buf);
   Editor_PrintHeader(config);
   if (read(STDIN_FILENO, &c, 1) == 1) {
     if (c == '['){
@@ -155,7 +178,10 @@ void Editor_PrintHeader(EditorConfig *config){
     printf("  -- INSERT --");
     printf(RESETCOLOR);
   } else if (config->mode == COMMAND){
-    // command mode
+    printf(BOLD);
+    printf(":");
+    printf(config->cmd_buf->buf, config->cmd_buf->idx);
+    printf(RESETFORMAT);
   }
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
