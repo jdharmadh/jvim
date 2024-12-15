@@ -129,6 +129,7 @@ void Editor_ProcessCommand(EditorConfig *config){
     } else if(strcmp(config->cmd_buf->buf, "w") == 0){
         TextFile_Save(config->file);
     }
+    CommandBuffer_Clear(config->cmd_buf);
 }
 
 void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change){
@@ -186,7 +187,7 @@ void Editor_PrintHeader(EditorConfig *config){
   } else if (config->mode == COMMAND){
     printf(BOLD);
     printf(":");
-    printf(config->cmd_buf->buf, config->cmd_buf->idx);
+    printf("%.*s", config->cmd_buf->idx, config->cmd_buf->buf);
     printf(RESETFORMAT);
   }
   Editor_SetCursor(config, old_pos);
