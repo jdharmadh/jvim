@@ -20,13 +20,6 @@ int main(int argc, char **argv){
     Editor_Print(config);
     char c;
     while (config->running && read(STDIN_FILENO, &c, 1) == 1){
-      // some asserts for debugging
-      assert(config->running);
-      assert(config->window_cursor.x >= 0);
-      assert(config->window_cursor.y >= 1);
-      assert(config->file->num_lines > 0);
-      // assert(config->window_cursor.y <= config->file->num_lines + 1);
-      // assert(config->window_cursor.x <= config->file->lines[config->window_cursor.y - 1]->line_length);
       Editor_ProcessKey(config, c);
       Editor_PrintCursor(config);
     }

@@ -6,7 +6,7 @@ CFLAGS = -std=c17 -Wall -g
 TARGET = jvim
 
 # Source files
-SRC = jvim.c
+SRC = jvim.c text.c editor.c
 
 # Header files
 HEADERS = layouts.h text.h colors.h editor.h
