@@ -55,24 +55,21 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
     } else if (c == '0'){
       config->window_cursor.x = 0;
     } else if (c == '$'){
-      config->window_cursor.x = config->file->lines[config->window_cursor.y - 1]->line_length;
+      config->window_cursor.x = config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length;
     } else if (c == 'G'){
-      config->window_cursor.y = config->file->num_lines;
+      // move file_cursor to end of file, then move window cursor too
+      config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
+      config->window_cursor.y = config->window_size.ws_row - 1;
+      Editor_Print(config);
     } else if (c == 'o'){
-      TextFile_InsertLine(config->file, config->window_cursor.y);
+      TextFile_InsertLine(config->file, config->window_cursor.y + config->file_cursor.y - 1);
       config->window_cursor.y += 1;
       config->window_cursor.x = 0;
       Editor_Print(config);
     } else if (c == 'O'){
-      TextFile_InsertLine(config->file, config->window_cursor.y - 1);
+      TextFile_InsertLine(config->file, config->window_cursor.y + config->file_cursor.y - 2);
       config->window_cursor.x = 0;
       Editor_Print(config);
-    }
-    else if (c == 'd'){
-      printf("\33[2K\r");
-      printf(GREEN);
-      printf("%s", config->file->lines[config->window_cursor.y - 1]->text);
-      printf(RESETCOLOR);
     }
   }
 }
