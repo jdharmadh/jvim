@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "text.h"
 #include "colors.h"
@@ -8,9 +9,9 @@
 #include "command.h"
 #include "editor.h"
 
-EditorConfig* Editor_FreshSetup() {
+EditorConfig* Editor_FreshSetup(char* filename) {
   EditorConfig* ec = (EditorConfig*) malloc(sizeof(EditorConfig));
-  ec->file = TextFile_Setup();
+  ec->file = TextFile_Setup(filename);
   ec->window_cursor.x = 0;
   ec->window_cursor.y = 1;
   ec->file_cursor.x = 0;
@@ -51,14 +52,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
         if (c == 127){
             CommandBuffer_DeleteChar(config->cmd_buf);
         } else if (c == 10){
-            if (config->cmd_buf->idx == 0){
-                config->mode = NORMAL;
-            }
-            else if (config->cmd_buf->buf[0] == 'w'){
-                // write the file
-            } else if (config->cmd_buf->buf[0] == 'q'){
-                config->running = false;
-            }
+            Editor_ProcessCommand(config);
             CommandBuffer_Clear(config->cmd_buf);
             config->mode = NORMAL;
         }
@@ -123,6 +117,18 @@ void Editor_ProcessEscape(EditorConfig *config){
       Editor_ProcessKey(config, c);
     }
   }
+}
+
+void Editor_ProcessCommand(EditorConfig *config){
+    config->cmd_buf->buf[config->cmd_buf->idx] = '\0';
+    if(strcmp(config->cmd_buf->buf, "q!") == 0){
+        config->running = false;
+    } else if(strcmp(config->cmd_buf->buf, "wq") == 0){
+        TextFile_Save(config->file);
+        config->running = false;
+    } else if(strcmp(config->cmd_buf->buf, "w") == 0){
+        TextFile_Save(config->file);
+    }
 }
 
 void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change){

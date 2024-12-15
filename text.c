@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "colors.h"
 #include "layouts.h"
@@ -17,10 +18,23 @@ TextLine* TextFile_AppendLine(TextFile* file) {
   return file->lines[file->num_lines++];
 }
 
-TextFile* TextFile_Setup() {
+TextFile* TextFile_Setup(char* filename) {
   TextFile* tf = (TextFile*) malloc(sizeof(TextFile));
+  tf->filename = malloc(strlen(filename) + 1);
+  strcpy(tf->filename, filename);
   tf->num_lines = 0;
   TextFile_AppendLine(tf);
+  // read in the file
+  FILE *file = fopen(filename, "r");
+  if (!file) {
+    fprintf(stderr, "Error opening file\n");
+    exit(1);
+  }
+  char c;
+  while ((c = fgetc(file)) != EOF) {
+    TextFile_AppendChar(tf, c);
+  }
+  fclose(file);
   return tf;
 }
 
@@ -154,6 +168,20 @@ void TextFile_PrintLine(TextFile* file, int line_number){
   else printf("   ");
   printf(RESETCOLOR);
   printf("%.*s", file->lines[line_number - 1]->line_length, file->lines[line_number - 1]->text);
+}
+
+void TextFile_Save(TextFile* file){
+  FILE *opened_file = fopen(file->filename, "w");
+  if (!opened_file) {
+    fprintf(stderr, "Error opening file\n");
+    exit(1);
+  }
+  // write the file
+  for (int i = 0; i < file->num_lines - 1; i++) {
+    fprintf(opened_file, "%.*s\n", file->lines[i]->line_length, file->lines[i]->text);
+  }
+  fprintf(opened_file, "%.*s", file->lines[file->num_lines - 1]->line_length, file->lines[file->num_lines - 1]->text);
+  fclose(opened_file);
 }
 
 void TextFile_Free(TextFile* file){

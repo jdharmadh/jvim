@@ -16,6 +16,7 @@ typedef struct tline {
 } TextLine;
 
 typedef struct tfile {
+  char *filename;
   TextLine* lines[MAX_LINE_NUMBER];
   int16_t num_lines;
 } TextFile;
