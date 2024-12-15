@@ -14,7 +14,6 @@ void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change);
 void Editor_SetCursor(EditorConfig *config, TextPos pos);
 void Editor_PrintCursor(EditorConfig *config);
 void Editor_PrintHeader(EditorConfig *config);
-void Editor_ReprintHeader(EditorConfig *config);
 void Editor_Print(EditorConfig *config);
 
 EditorConfig* Editor_FreshSetup() {
@@ -59,7 +58,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
     // if the user pressed the i key, enter insert mode
     if (c == 'i'){
       config->mode = INSERT;
-      Editor_ReprintHeader(config);
+      Editor_PrintHeader(config);
     } else if (c == 'q'){
       config->running = false;
     } else if (c == '0'){
@@ -92,11 +91,10 @@ void Editor_ProcessEscape(EditorConfig *config){
   int prev_mode = config->mode;
   //if the user just pressed the escape key, return to normal mode
   config->mode = NORMAL;
-  Editor_ReprintHeader(config);
+  Editor_PrintHeader(config);
   if (read(STDIN_FILENO, &c, 1) == 1) {
     if (c == '['){
       config->mode = prev_mode;
-      // Editor_ReprintHeader(config);
       if (read(STDIN_FILENO, &c, 1) == 1){
         if (c == 'A'){
           Editor_MoveCursor(config, -1, 0);
@@ -140,13 +138,13 @@ void Editor_SetCursor(EditorConfig *config, TextPos pos){
     config->window_cursor.y = 1;
   }
   //don't allow the cursor to go past the end of the file
-  if (config->window_cursor.y > config->window_size.ws_row - 3){ // todo: fix this
+  if (config->window_cursor.y > config->window_size.ws_row - 1){
     config->window_cursor.y = config->window_size.ws_row - 1;
     config->file_cursor.y += 1;
     if (config->file_cursor.y > config->file->num_lines){
       config->file_cursor.y = config->file->num_lines;
     }
-    config->window_cursor.y = config->window_size.ws_row - 3; // TODO: fix this
+    config->window_cursor.y = config->window_size.ws_row - 1;
   }
   //don't allow the cursor to go past the end of the line
   if (config->window_cursor.x > config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length){
@@ -155,34 +153,33 @@ void Editor_SetCursor(EditorConfig *config, TextPos pos){
 }
 
 void Editor_PrintCursor(EditorConfig *config){
-  printf("\e[%d;%dH", config->window_cursor.y + 1, config->window_cursor.x + 5);
+  printf("\e[%d;%dH", config->window_cursor.y, config->window_cursor.x + 5);
 }
 
 void Editor_PrintHeader(EditorConfig *config){
+  TextPos old_pos = {.x = config->window_cursor.x, .y = config->window_cursor.y};
+  // make the cursor go to the bottom of the screen, based on config->window_size.ws_row
+  printf("\e[%d;1H", config->window_size.ws_row);
+  // clear the current line
+  printf("\33[2K\r");
   if (config->mode == INSERT){
     printf(YELLOW);
-    printf("-- INSERT --");
+    printf("  -- INSERT --");
     printf(RESETCOLOR);
   } else {
+    printf(GREEN);
     printf(" file cursor: (%d, %d)", config->file_cursor.x, config->file_cursor.y);
     printf(" window cursor: (%d, %d)", config->window_cursor.x, config->window_cursor.y);
-    printf("starting from line %d", config->file_cursor.y);
+    printf(" winsize (%d, %d)", config->window_size.ws_row, config->window_size.ws_col);
+    printf(RESETCOLOR);
   }
-}
-
-void Editor_ReprintHeader(EditorConfig *config) {
-  TextPos old_pos = {.x = config->window_cursor.x, .y = config->window_cursor.y};
-  printf("\e[1;1H\e[2K");
-  Editor_PrintHeader(config);
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
 }
 
 void Editor_Print(EditorConfig *config){
   printf("\e[1;1H\e[2J");
-  Editor_PrintHeader(config);
-  printf("\n");
-  for (int i = config->file_cursor.y - 1; i < config->file_cursor.y + config->window_size.ws_row - 3; i++){
+  for (int i = config->file_cursor.y - 1; i < config->file_cursor.y + config->window_size.ws_row - 2; i++){
     if (i < config->file->num_lines){
       TextFile_PrintLine(config->file, i + 1);
       printf("\n");
@@ -190,6 +187,7 @@ void Editor_Print(EditorConfig *config){
       printf("~\n");
     }
   }
+  Editor_PrintHeader(config);
   Editor_PrintCursor(config);
 }
 
