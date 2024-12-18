@@ -69,15 +69,16 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       config->window_cursor.x = 0;
     } else if (c == '$'){
       config->window_cursor.x = config->file->lines[config->window_cursor.y + config->file_cursor.y - 2]->line_length;
-    } else if (c == 'G'){ // todo: BROKEN!
+    } else if (c == 'G'){
       // move file_cursor to end of file, then move window cursor too
       config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
       config->window_cursor.y = config->window_size.ws_row - 1;
       Editor_Print(config);
     } else if (c == 'o'){
       TextFile_InsertLine(config->file, config->window_cursor.y + config->file_cursor.y - 1);
-      config->window_cursor.y += 1;
-      config->window_cursor.x = 0;
+      TextPos new_pos = {.x = 0, .y = config->window_cursor.y + 1};
+      Editor_SetCursor(config, new_pos);
+      config->mode = INSERT;
       Editor_Print(config);
     } else if (c == 'O'){
       TextFile_InsertLine(config->file, config->window_cursor.y + config->file_cursor.y - 2);
@@ -155,14 +156,12 @@ void Editor_SetCursor(EditorConfig *config, TextPos pos){
     }
     config->window_cursor.y = 1;
   }
+
   //don't allow the cursor to go past the end of the file
-  if (config->window_cursor.y > config->file->num_lines){
-    config->window_cursor.y = config->file->num_lines; // TODO: BROKEN!
-    // config->file_cursor.y = config->file->num_lines - config->window_size.ws_row + 2;
-    // if (config->file_cursor.y < 1){
-    //   config->file_cursor.y = 1;
-    // }
+  if (config->window_cursor.y > config->file->num_lines - config->file_cursor.y + 1){
+    config->window_cursor.y = config->file->num_lines - config->file_cursor.y + 1;
   }
+  
   if (config->window_cursor.y > config->window_size.ws_row - 1){
     config->window_cursor.y = config->window_size.ws_row - 1;
     config->file_cursor.y += 1;
@@ -197,8 +196,7 @@ void Editor_PrintHeader(EditorConfig *config){
     printf("%.*s", config->cmd_buf->idx, config->cmd_buf->buf);
     printf(RESETFORMAT);
   } else {
-    printf("file cursor: %d, %d", config->file_cursor.y, config->file_cursor.x);
-    printf(" window cursor: %d, %d", config->window_cursor.y, config->window_cursor.x);
+    // normal mode
   }
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
