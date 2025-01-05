@@ -10,12 +10,12 @@
 #define MAX_LINE_LENGTH 512
 #define MAX_LINE_NUMBER 1024
 
-typedef struct tline {
+typedef struct {
   char text[MAX_LINE_LENGTH];
   int16_t line_length;
 } TextLine;
 
-typedef struct tfile {
+typedef struct {
   char *filename;
   TextLine* lines[MAX_LINE_NUMBER];
   int16_t num_lines;

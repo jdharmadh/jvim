@@ -26,15 +26,13 @@ TextFile* TextFile_Setup(char* filename) {
   TextFile_AppendLine(tf);
   // read in the file
   FILE *file = fopen(filename, "r");
-  if (!file) {
-    fprintf(stderr, "Error opening file\n");
-    exit(1);
+  if (file) {
+    char c;
+    while ((c = fgetc(file)) != EOF) {
+      TextFile_AppendChar(tf, c);
+    }
+    fclose(file);
   }
-  char c;
-  while ((c = fgetc(file)) != EOF) {
-    TextFile_AppendChar(tf, c);
-  }
-  fclose(file);
   return tf;
 }
 

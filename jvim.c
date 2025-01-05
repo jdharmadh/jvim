@@ -13,9 +13,13 @@
 EditorConfig *config;
 
 void setup();
-void finish(char *filename);
+void finish();
 
 int main(int argc, char **argv){
+    if (argc != 2) {
+        fprintf(stderr, "Usage: jvim <filename>\n");
+        exit(EXIT_FAILURE);
+    }
     config = Editor_FreshSetup(argv[1]);
     setup();
     Editor_Print(config);
@@ -24,8 +28,8 @@ int main(int argc, char **argv){
       Editor_ProcessKey(config, c);
       Editor_PrintCursor(config);
     }
-    finish(argv[1]);
-    return 0;
+    finish();
+    return EXIT_SUCCESS;
 }
 
 void setup() { 
@@ -39,7 +43,7 @@ void setup() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-void finish(char *filename) {
+void finish() {
   // disable raw mode
   printf("\e[1;1H\e[2J");
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &(config->orig_termios));
