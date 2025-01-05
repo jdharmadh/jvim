@@ -6,7 +6,7 @@
 #include <string.h>
 
 bool startsWith(char *prefix, char *str) {
-    return strncmp(prefix, str, strlen(prefix)) == 0;
+  return strncmp(prefix, str, strlen(prefix)) == 0;
 }
 
-#endif // UTILS_H
+#endif  // UTILS_H

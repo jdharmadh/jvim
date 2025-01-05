@@ -5,4 +5,4 @@
 
 void Search_Find(EditorConfig* config);
 
-#endif // SEARCH_H_
+#endif  // SEARCH_H_

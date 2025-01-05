@@ -16,4 +16,4 @@
 #define REVERSE "\033[7m"
 #define RESETFORMAT "\033[22m"
 
-#endif // COLORS_H_
+#endif  // COLORS_H_

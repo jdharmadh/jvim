@@ -1,10 +1,10 @@
 #ifndef LAYOUT_H_
 #define LAYOUT_H_
 
-#include <termios.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <stdbool.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
 
 #define MAX_COMMAND_LENGTH 64
 #define MAX_LINE_LENGTH 512
@@ -16,7 +16,7 @@ typedef struct {
 } TextLine;
 
 typedef struct {
-  char *filename;
+  char* filename;
   TextLine* lines[MAX_LINE_NUMBER];
   int16_t num_lines;
 } TextFile;
@@ -44,12 +44,7 @@ typedef struct {
   SearchResult* search_results;
 } FindReplace;
 
-enum EditorMode {
-  NORMAL,
-  INSERT,
-  COMMAND,
-  FIND_REPLACE
-};
+enum EditorMode { NORMAL, INSERT, COMMAND, FIND_REPLACE };
 
 typedef struct {
   char buf[MAX_COMMAND_LENGTH];
@@ -60,7 +55,8 @@ typedef struct {
   struct termios orig_termios;
   TextFile* file;
   TextPos window_cursor;
-  TextPos file_cursor; // x represents columns past zero, y represents lines past zero
+  TextPos file_cursor;  // x represents columns past zero, y represents lines
+                        // past zero
   struct winsize window_size;
   enum EditorMode mode;
   CommandBuffer* cmd_buf;
@@ -68,4 +64,4 @@ typedef struct {
   bool running;
 } EditorConfig;
 
-#endif // LAYOUT_H_
+#endif  // LAYOUT_H_
