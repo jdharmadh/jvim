@@ -169,6 +169,39 @@ void TextFile_PrintLine(TextFile* file, int line_number){
   printf("%.*s", file->lines[line_number - 1]->line_length, file->lines[line_number - 1]->text);
 }
 
+void TextFile_PrintLine_SearchMode(TextFile* file, int line_number, SearchResult* search_results){
+  printf(GREEN);
+  printf("%d", line_number);
+  if (line_number >= 100) printf(" ");
+  else if (line_number >= 10) printf("  ");
+  else printf("   ");
+  printf(RESETCOLOR);
+  TextLine* line = file->lines[line_number - 1];
+  SearchResult* cur = search_results;
+  int current_pos = 0;
+  while (cur != NULL) {
+    if (cur->range.start.y < line_number - 1){
+      cur = cur->next;
+      continue;
+    }
+    if (cur->range.start.y > line_number - 1) break;
+    // Print text before the match
+    printf("%.*s", cur->range.start.x - current_pos, line->text + current_pos);
+    // Print the match in yellow
+    printf(CYAN);
+    printf(BOLD);
+    printf("%.*s", cur->range.end.x - cur->range.start.x, line->text + cur->range.start.x);
+    printf(RESETCOLOR);
+    printf(RESETFORMAT);
+    current_pos = cur->range.end.x;
+    cur = cur->next;
+  }
+  // Print remaining text after last match
+  if (current_pos < line->line_length) {
+    printf("%.*s", line->line_length - current_pos, line->text + current_pos);
+  }
+}
+
 void TextFile_Save(TextFile* file){
   FILE *opened_file = fopen(file->filename, "w");
   if (!opened_file) {

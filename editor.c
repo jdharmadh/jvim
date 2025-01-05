@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "text.h"
@@ -8,6 +9,8 @@
 #include "layouts.h"
 #include "command.h"
 #include "editor.h"
+#include "search.h"
+#include "utils.h"
 
 EditorConfig* Editor_FreshSetup(char* filename) {
   EditorConfig* ec = (EditorConfig*) malloc(sizeof(EditorConfig));
@@ -17,6 +20,9 @@ EditorConfig* Editor_FreshSetup(char* filename) {
   ec->file_cursor.x = 0;
   ec->file_cursor.y = 1;
   ec->cmd_buf = CommandBuffer_Init();
+  ec->find_replace = malloc(sizeof(FindReplace));
+  ec->find_replace->find = NULL;
+  ec->find_replace->replace = NULL;
   ec->mode = NORMAL;
   ec->running = true;
   return ec;
@@ -54,7 +60,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
         } else if (c == 10){
             Editor_ProcessCommand(config);
             CommandBuffer_Clear(config->cmd_buf);
-            config->mode = NORMAL;
+            //config->mode = NORMAL; TODO: uncomment this???
         }
         else {
             CommandBuffer_AddChar(config->cmd_buf, c);
@@ -97,7 +103,12 @@ void Editor_ProcessEscape(EditorConfig *config){
   //if the user just pressed the escape key, return to normal mode
   config->mode = NORMAL;
   CommandBuffer_Clear(config->cmd_buf);
-  Editor_PrintHeader(config);
+  if (prev_mode == FIND_REPLACE) {
+    Editor_Print(config);
+    // TODO: free the memory
+  } else {
+    Editor_PrintHeader(config);
+  }
   if (read(STDIN_FILENO, &c, 1) == 1) {
     if (c == '['){
       config->mode = prev_mode;
@@ -129,6 +140,11 @@ void Editor_ProcessCommand(EditorConfig *config){
         config->running = false;
     } else if(strcmp(config->cmd_buf->buf, "w") == 0){
         TextFile_Save(config->file);
+    } else if (startsWith("find ", config->cmd_buf->buf)){
+        config->mode = FIND_REPLACE;
+        config->find_replace->find = config->cmd_buf->buf + 5;
+        Search_Find(config);
+        Editor_Print(config);
     }
     CommandBuffer_Clear(config->cmd_buf);
 }
@@ -195,8 +211,12 @@ void Editor_PrintHeader(EditorConfig *config){
     printf(":");
     printf("%.*s", config->cmd_buf->idx, config->cmd_buf->buf);
     printf(RESETFORMAT);
-  } else {
-    // normal mode
+  } else if (config->mode == FIND_REPLACE){
+    printf(BOLD);
+    printf(CYAN);
+    printf("\"%s\"", config->find_replace->find);
+    printf(RESETCOLOR);
+    printf(RESETFORMAT);
   }
   Editor_SetCursor(config, old_pos);
   Editor_PrintCursor(config);
@@ -206,8 +226,13 @@ void Editor_Print(EditorConfig *config){
   printf("\e[1;1H\e[2J");
   for (int i = config->file_cursor.y - 1; i < config->file_cursor.y + config->window_size.ws_row - 2; i++){
     if (i < config->file->num_lines){
+      if(config->mode == FIND_REPLACE){
+        TextFile_PrintLine_SearchMode(config->file, i + 1, config->find_replace->search_results);
+        printf("\n");
+      } else {
       TextFile_PrintLine(config->file, i + 1);
       printf("\n");
+      }
     } else {
       printf("~\n");
     }

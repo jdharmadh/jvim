@@ -21,25 +21,42 @@ typedef struct {
   int16_t num_lines;
 } TextFile;
 
-// This is not the actual position in the terminal because
-// we have the line numbers which offset the actual position by 4
-typedef struct tpos {
+typedef struct {
   int16_t x;
   int16_t y;
 } TextPos;
 
+typedef struct {
+  TextPos start;
+  TextPos end;
+} TextRange;
+
+typedef struct SearchResult SearchResult;
+
+typedef struct SearchResult {
+  TextRange range;
+  SearchResult* next;
+} SearchResult;
+
+typedef struct {
+  char* find;
+  char* replace;
+  SearchResult* search_results;
+} FindReplace;
+
 enum EditorMode {
   NORMAL,
   INSERT,
-  COMMAND
+  COMMAND,
+  FIND_REPLACE
 };
 
-typedef struct cmd_buf {
+typedef struct {
   char buf[MAX_COMMAND_LENGTH];
   int16_t idx;
 } CommandBuffer;
 
-typedef struct editorConfig {
+typedef struct {
   struct termios orig_termios;
   TextFile* file;
   TextPos window_cursor;
@@ -47,6 +64,7 @@ typedef struct editorConfig {
   struct winsize window_size;
   enum EditorMode mode;
   CommandBuffer* cmd_buf;
+  FindReplace* find_replace;
   bool running;
 } EditorConfig;
 

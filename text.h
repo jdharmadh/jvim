@@ -12,6 +12,7 @@ TextPos TextFile_InsertChar(TextFile* file, char c, TextPos pos);
 TextPos TextFile_DeleteChar(TextFile* file, TextPos pos);
 void TextFile_Print(TextFile* file);
 void TextFile_PrintLine(TextFile* file, int line_number);
+void TextFile_PrintLine_SearchMode(TextFile* file, int line_number, SearchResult* search_results);
 void TextFile_Free(TextFile* file);
 void TextFile_Save(TextFile* file);
 
