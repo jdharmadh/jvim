@@ -231,5 +231,6 @@ void TextFile_Free(TextFile* file) {
   for (int i = 0; i < file->num_lines; i++) {
     free(file->lines[i]);
   }
+  free(file->filename);
   free(file);
 }

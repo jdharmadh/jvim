@@ -111,7 +111,6 @@ void Editor_ProcessEscape(EditorConfig *config) {
   CommandBuffer_Clear(config->cmd_buf);
   if (prev_mode == FIND_REPLACE) {
     Editor_Print(config);
-    // TODO: free the memory
   } else {
     Editor_PrintHeader(config);
   }
@@ -266,5 +265,6 @@ void Editor_Print(EditorConfig *config) {
 
 void Editor_Free(EditorConfig *config) {
   TextFile_Free(config->file);
+  free(config->find_replace);
   free(config);
 }
