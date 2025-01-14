@@ -174,7 +174,8 @@ void TextFile_PrintLine(TextFile* file, int line_number) {
 }
 
 void TextFile_PrintLine_SearchMode(TextFile* file, int line_number,
-                                   SearchResult* search_results) {
+                                   SearchResult* search_results,
+                                   SearchResult* current_result) {
   printf(GREEN);
   printf("%d", line_number);
   if (line_number >= 100)
@@ -193,11 +194,17 @@ void TextFile_PrintLine_SearchMode(TextFile* file, int line_number,
       continue;
     }
     if (cur->range.start.y > line_number - 1) break;
+
     // Print text before the match
     printf("%.*s", cur->range.start.x - current_pos, line->text + current_pos);
-    // Print the match in yellow
-    printf(CYAN);
-    printf(BOLD);
+    // Print the match
+    if (cur == current_result) {
+      printf(BOLD);
+      printf(MAGENTA);
+    } else {
+      printf(BOLD);
+      printf(CYAN);
+    }
     printf("%.*s", cur->range.end.x - cur->range.start.x,
            line->text + cur->range.start.x);
     printf(RESETCOLOR);

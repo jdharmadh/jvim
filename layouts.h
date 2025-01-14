@@ -42,6 +42,7 @@ typedef struct {
   char* find;
   char* replace;
   SearchResult* search_results;
+  SearchResult* current_result;
 } FindReplace;
 
 enum EditorMode { NORMAL, INSERT, COMMAND, FIND_REPLACE };

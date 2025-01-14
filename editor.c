@@ -24,6 +24,8 @@ EditorConfig *Editor_FreshSetup(char *filename) {
   ec->find_replace = malloc(sizeof(FindReplace));
   ec->find_replace->find = NULL;
   ec->find_replace->replace = NULL;
+  ec->find_replace->search_results = NULL;
+  ec->find_replace->current_result = NULL;
   ec->mode = NORMAL;
   ec->running = true;
   return ec;
@@ -66,7 +68,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       CommandBuffer_AddChar(config->cmd_buf, c);
     }
     Editor_PrintHeader(config);
-  } else {
+  } else if (config->mode == NORMAL) {
     // if the user pressed the i key, enter insert mode
     if (c == 'i') {
       config->mode = INSERT;
@@ -99,6 +101,17 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
     } else if (c == ':') {
       config->mode = COMMAND;
       Editor_PrintHeader(config);
+    }
+  } else if (config->mode == FIND_REPLACE) {
+    if (c == 'n') {
+      if (config->find_replace->current_result->next != NULL) {
+        config->find_replace->current_result =
+            config->find_replace->current_result->next;
+      } else {
+        config->find_replace->current_result =
+            config->find_replace->search_results;
+      }
+      Editor_Print(config);
     }
   }
 }
@@ -249,7 +262,8 @@ void Editor_Print(EditorConfig *config) {
     if (i < config->file->num_lines) {
       if (config->mode == FIND_REPLACE) {
         TextFile_PrintLine_SearchMode(config->file, i + 1,
-                                      config->find_replace->search_results);
+                                      config->find_replace->search_results,
+                                      config->find_replace->current_result);
         printf("\n");
       } else {
         TextFile_PrintLine(config->file, i + 1);

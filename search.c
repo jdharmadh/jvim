@@ -30,4 +30,5 @@ void Search_Find(EditorConfig* config) {
   }
 
   config->find_replace->search_results = head;
+  config->find_replace->current_result = head;
 }
