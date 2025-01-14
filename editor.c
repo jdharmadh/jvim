@@ -103,7 +103,10 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
       Editor_PrintHeader(config);
     }
   } else if (config->mode == FIND_REPLACE) {
-    if (c == 'n') {
+    if (config->find_replace->current_result == NULL) {
+      return;
+    }
+    if (c == 10) {
       if (config->find_replace->current_result->next != NULL) {
         config->find_replace->current_result =
             config->find_replace->current_result->next;
@@ -111,6 +114,11 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
         config->find_replace->current_result =
             config->find_replace->search_results;
       }
+
+      Editor_CursorToCurrentResult(config);
+      Editor_Print(config);
+    } else if (c == ':') {
+      config->mode = COMMAND;
       Editor_Print(config);
     }
   }
@@ -162,6 +170,12 @@ void Editor_ProcessCommand(EditorConfig *config) {
     config->mode = FIND_REPLACE;
     config->find_replace->find = config->cmd_buf->buf + 5;
     Search_Find(config);
+    // move the cursor to the first result
+    if (config->find_replace->current_result == NULL) {
+      config->mode = NORMAL;
+    } else {
+      Editor_CursorToCurrentResult(config);
+    }
     Editor_Print(config);
   }
   CommandBuffer_Clear(config->cmd_buf);
@@ -171,6 +185,22 @@ void Editor_MoveCursor(EditorConfig *config, int row_change, int col_change) {
   TextPos new_pos = {.x = config->window_cursor.x + col_change,
                      .y = config->window_cursor.y + row_change};
   Editor_SetCursor(config, new_pos);
+}
+
+void Editor_CursorToCurrentResult(EditorConfig *config) {
+  if (config->find_replace->current_result == NULL) return;
+
+  if (config->find_replace->current_result->range.start.y >
+          config->file_cursor.y + config->window_size.ws_row - 3 ||
+      config->find_replace->current_result->range.start.y <
+          config->file_cursor.y) {
+    config->file_cursor.y =
+        config->find_replace->current_result->range.start.y + 1;
+  }
+  config->window_cursor.y =
+      config->find_replace->current_result->range.start.y -
+      config->file_cursor.y + 2;
+  config->window_cursor.x = config->find_replace->current_result->range.start.x;
 }
 
 // TODO: fix this cursed method
