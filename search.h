@@ -4,5 +4,7 @@
 #include "layouts.h"
 
 void Search_Find(EditorConfig* config);
+void Search_ReplaceNextResult(EditorConfig* config);
+void Search_ReplaceAll(EditorConfig* config);
 
 #endif  // SEARCH_H_

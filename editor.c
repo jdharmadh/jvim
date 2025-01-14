@@ -106,7 +106,7 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
     if (config->find_replace->current_result == NULL) {
       return;
     }
-    if (c == 10) {
+    if (c == 'n') {
       if (config->find_replace->current_result->next != NULL) {
         config->find_replace->current_result =
             config->find_replace->current_result->next;
@@ -117,7 +117,24 @@ void Editor_ProcessKey(EditorConfig *config, char c) {
 
       Editor_CursorToCurrentResult(config);
       Editor_Print(config);
-    } else if (c == ':') {
+    } else if (c == 10) {
+      if (config->find_replace->replace == NULL) return;
+      Search_ReplaceNextResult(config);
+      if (config->find_replace->current_result == NULL) {
+        config->mode = NORMAL;
+      } else {
+        Editor_CursorToCurrentResult(config);
+      }
+      Editor_Print(config);
+
+    } else if (c == 'a') {
+      if (config->find_replace->replace == NULL) return;
+      Search_ReplaceAll(config);
+      config->mode = NORMAL;
+      Editor_Print(config);
+    }
+
+    else if (c == ':') {
       config->mode = COMMAND;
       Editor_Print(config);
     }
@@ -169,6 +186,21 @@ void Editor_ProcessCommand(EditorConfig *config) {
   } else if (startsWith("find ", config->cmd_buf->buf)) {
     config->mode = FIND_REPLACE;
     config->find_replace->find = config->cmd_buf->buf + 5;
+    Search_Find(config);
+    // move the cursor to the first result
+    if (config->find_replace->current_result == NULL) {
+      config->mode = NORMAL;
+    } else {
+      Editor_CursorToCurrentResult(config);
+    }
+    Editor_Print(config);
+  } else if (startsWith("replace ", config->cmd_buf->buf)) {
+    config->mode = FIND_REPLACE;
+    // split by space to find the find and replace strings
+    char *find = strtok(config->cmd_buf->buf + 8, " ");
+    char *replace = strtok(NULL, " ");
+    config->find_replace->find = strdup(find);
+    config->find_replace->replace = strdup(replace);
     Search_Find(config);
     // move the cursor to the first result
     if (config->find_replace->current_result == NULL) {
